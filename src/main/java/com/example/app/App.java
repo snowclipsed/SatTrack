@@ -459,7 +459,6 @@ public class App extends Application {
         text.setGeometry(newimagepoint);
         mapView.setViewpoint(new Viewpoint(newcoords[1], newcoords[0], scale));
     }
-
     /**
      * Switch statement to select NORAD ID based on satellite name in dropdown
      *
