@@ -50,21 +50,34 @@ import com.esri.arcgisruntime.mapping.ArcGISMap;
 import com.esri.arcgisruntime.mapping.BasemapStyle;
 import com.esri.arcgisruntime.mapping.Viewpoint;
 import com.esri.arcgisruntime.mapping.view.MapView;
+import java.util.Timer;
 
 //JavaFX block
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.scene.control.Slider;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Stack;
+import java.util.TimerTask;
 
 /**
  * {@link App} :
@@ -89,7 +102,11 @@ public class App extends Application {
 
     private MapView mapView;
     private Integer satID = 25544;
-    private  Double scale = 700000000.0;
+    private  Double scale = 70000000.0;
+
+    private Timer timer;
+
+    private final Integer countdownSeconds = 11;
 
     public static void main(String[] args) {
         Application.launch(args);
@@ -119,7 +136,7 @@ public class App extends Application {
 
     @Override
     public void start(Stage stage) throws URISyntaxException, IOException, InterruptedException {
-
+        this.timer = new Timer();
         // A string array of satellites we want to show.
 
         /**
@@ -139,6 +156,27 @@ public class App extends Application {
                 };
 
 
+        Rectangle whiteBox = new Rectangle(300, 450, Color.rgb(255, 255, 255, 0.5));
+        whiteBox.setStroke(Color.BLACK);
+        whiteBox.setStrokeWidth(2);
+
+
+        Text UIheading = new Text("Control Panel");
+        UIheading.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+        UIheading.setFill(Color.BLACK);
+        Text comboBoxHeading = new Text("Popular Satellites");
+        comboBoxHeading.setFont(new Font(15));
+        Text searchByNORAD = new Text("Find by NORAD ID");
+        searchByNORAD.setFont(new Font(15));
+        Text timeheading = new Text("Time remaining till next update:");
+        timeheading.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+        timeheading.setFill(Color.WHITE);
+        Text timeremaining = new Text(countdownSeconds.toString());
+        timeremaining.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+        timeremaining.setFill(Color.WHITE);
+
+
+
         //Create a combo box to switch satellites
         /**
          *      * {@link ComboBox} <b>combo_box</b> - Creates a JavaFX ComboBox UI Element on the screen which functions as a dropdown
@@ -151,6 +189,8 @@ public class App extends Application {
          *      *              Then, setpoint() is called to instantly update the location of the point which shows the selected
          *      *              satellite's current position (which otherwise is set to update every 5 seconds)
          */
+
+
         ComboBox<String> combo_box =
                 new ComboBox<>(FXCollections
                         .observableArrayList(satList));
@@ -163,16 +203,32 @@ public class App extends Application {
         slider.setShowTickLabels(true);
         slider.setMajorTickUnit(10000000f); // Set how much is a big tick.
         slider.setBlockIncrement(10000f);
-        slider.setMaxSize(200,10);
+        slider.setMaxSize(30,500);
+        slider.setOrientation(Orientation.VERTICAL);
         slider.setSnapToPixel(false);
         slider.setLayoutX(250);
         slider.setLayoutX(100);
 
+        TextField NORADinput = new TextField();
+        NORADinput.setPromptText("Enter NORAD ID");
+        NORADinput.setMaxWidth(175);
+        Button saveButton = new Button("Search ID");
 
+
+
+
+
+
+        Screen screen = Screen.getPrimary();
+        Rectangle2D bounds = screen.getVisualBounds();
         // Add the title to the window
         stage.setTitle("Satellite Tracker");
-        stage.setWidth(700);
-        stage.setHeight(700);
+        stage.setFullScreen(true);
+        stage.setX(bounds.getMinX());
+        stage.setY(bounds.getMinY());
+        stage.setWidth(bounds.getWidth());
+        stage.setHeight(bounds.getHeight());
+
         stage.show();
 
         /**
@@ -226,11 +282,27 @@ public class App extends Application {
          * One can add MapView to the pane using the {@code .getChildren()} method as done below.
          */
         mapView = new MapView();
-        stackPane.getChildren().add(mapView);
-        stackPane.getChildren().add(combo_box);
-        stackPane.getChildren().add(slider);
-        StackPane.setAlignment(slider, Pos.CENTER_LEFT);
-        StackPane.setAlignment(combo_box, Pos.TOP_LEFT);
+        stackPane.getChildren().addAll(mapView,whiteBox,UIheading,comboBoxHeading,combo_box,slider,searchByNORAD,NORADinput,saveButton,timeheading, timeremaining);
+        StackPane.setAlignment(whiteBox,Pos.TOP_RIGHT);
+        StackPane.setAlignment(UIheading, Pos.TOP_RIGHT);
+        StackPane.setAlignment(slider,Pos.CENTER_LEFT);
+        StackPane.setAlignment(comboBoxHeading, Pos.TOP_RIGHT);
+        StackPane.setAlignment(combo_box, Pos.TOP_RIGHT);
+        StackPane.setAlignment(searchByNORAD, Pos.TOP_RIGHT);
+        StackPane.setAlignment(NORADinput, Pos.TOP_RIGHT);
+        StackPane.setAlignment(saveButton, Pos.TOP_RIGHT);
+        StackPane.setAlignment(timeheading, Pos.BOTTOM_RIGHT);
+        StackPane.setAlignment(timeremaining, Pos.BOTTOM_RIGHT);
+        StackPane.setMargin(whiteBox, new Insets(70, 40, 0, 0));
+        StackPane.setMargin(UIheading, new Insets(75, 125, 0, 0));
+        StackPane.setMargin(slider, new Insets(100));
+        StackPane.setMargin(comboBoxHeading, new Insets(100, 135, 0, 0));
+        StackPane.setMargin(combo_box, new Insets(125, 100, 0,0));
+        StackPane.setMargin(searchByNORAD, new Insets(160, 135, 0, 0));
+        StackPane.setMargin(NORADinput, new Insets(185, 100, 0, 0));
+        StackPane.setMargin(saveButton, new Insets(220, 155, 0, 0));
+        StackPane.setMargin(timeheading, new Insets(70, 40, 100, 0));
+        StackPane.setMargin(timeremaining, new Insets(70, 175, 75, 0));
 
         // Make a map object and set its style
         ArcGISMap map = new ArcGISMap(BasemapStyle.ARCGIS_STREETS_NIGHT);
@@ -295,6 +367,7 @@ public class App extends Application {
 
                 try {
                     setpoint(satpoint,sattextgraphic,mapView);
+                    countdown(timeremaining);
                 } catch (URISyntaxException | IOException | InterruptedException e) {
                     throw new RuntimeException(e);
                 }
@@ -321,6 +394,7 @@ public class App extends Application {
 
             try {
                 setpoint(satpoint, sattextgraphic,mapView);
+                countdown(timeremaining);
             } catch (URISyntaxException | IOException | InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -339,6 +413,26 @@ public class App extends Application {
                 mapView.setViewpointScaleAsync(scale);
             }
         });
+
+        saveButton.setOnAction(e -> {
+            satID = Integer.valueOf(NORADinput.getText());
+            String satName;
+            try {
+                satName = satNameCall(satID);
+            } catch (URISyntaxException | IOException | InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
+            try {
+                setpoint(satpoint, sattextgraphic, mapView);
+                countdown(timeremaining);
+            } catch (URISyntaxException | IOException | InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
+            sattext.setText(satName);
+        });
+
+
+
 
         // add the point graphic to the graphics overlay
         graphicsOverlay.getGraphics().add(satpoint);
@@ -406,6 +500,27 @@ public class App extends Application {
         Satellite satellite = new Satellite(ID.toString(), "1", "-70.24637829392033", "43.66167125666995", Constants.N2YOAPI);
         return new Float[]{satellite.satlong,satellite.satlat};
     }
+
+    public String satNameCall(Integer ID) throws URISyntaxException, IOException, InterruptedException {
+        Satellite satellite = new Satellite(ID.toString(), "1", "-70.24637829392033", "43.66167125666995", Constants.N2YOAPI);
+        return satellite.satname;
+    }
+
+    public void countdown(Text timeremaining){
+        timer.schedule(new TimerTask() {
+
+            private int secondsRemaining = countdownSeconds;
+            @Override
+            public void run() {
+                    if (secondsRemaining > 0) {
+                        secondsRemaining--;
+                        timeremaining.setText(String.valueOf(secondsRemaining));
+                    }
+            }
+        }, 0, 1000); // Schedule the task to run every 1000 milliseconds (1 second)
+    }
+
+
 
 
 }

@@ -10,5 +10,6 @@ module com.example.app {
     requires java.net.http;
     requires com.fasterxml.jackson.databind;
     requires org.junit.jupiter.api;
+    requires com.opencsv;
     exports com.example.app;
 }
