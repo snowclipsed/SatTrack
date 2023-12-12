@@ -11,5 +11,6 @@ module com.example.app {
     requires com.fasterxml.jackson.databind;
     requires org.junit.jupiter.api;
     requires com.opencsv;
+    requires junit;
     exports com.example.app;
 }

@@ -35,7 +35,7 @@ Satellite Tracker is an open-source Java program that leverages the ArcGIS API a
 Before running the Satellite Tracker, ensure that you have the following prerequisites installed:
 
 - Java Development Kit (JDK) 8 to 20
-- ArcGIS API key (sign up [here](https://developers.arcgis.com/))
+- ArcGIS API key (sign up [here](https://developers.arcgis.com/documentation/mapping-apis-and-services/get-started/))
 - N2YO API key (obtainable [here](https://www.n2yo.com/api/))
 - IntelliJ IDEA (recommended for instructions ahead)
 

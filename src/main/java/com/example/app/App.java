@@ -147,13 +147,10 @@ public class App extends Application {
     private MapView mapView;
     private Integer satID = 25544;
     private Double scale = 70000000.0;
-
-    private Timer timer;
-
+    private Integer frequency = 10000;
     private final Integer countdownSeconds = 11;
-
+    private Timer timer;
     private LocatorTask locatorTask;
-
     private GeocodeParameters geocodeParameters;
 
     private String address;
@@ -480,7 +477,7 @@ public class App extends Application {
                 }
 //
                 try {
-                    Thread.sleep(10000); // Update every 10000 milliseconds (10 seconds). Change this to change update time.
+                    Thread.sleep(frequency); // Update every 10000 milliseconds (10 seconds). Change this to change update time.
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
