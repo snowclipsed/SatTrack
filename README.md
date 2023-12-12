@@ -1,5 +1,5 @@
 # SatTrack
-![Satellite Tracker](https://link.to/your/screenshot.png)
+![screenshot](src/Images/screenshot.png)
 
 Satellite Tracker is an open-source Java program that leverages the ArcGIS API and N2YO API to provide real-time tracking of satellites. This tool allows users to visualize the current locations of satellites, providing valuable information for tracking and monitoring purposes.
 

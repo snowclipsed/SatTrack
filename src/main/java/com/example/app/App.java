@@ -75,6 +75,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -281,6 +282,7 @@ public class App extends Application {
         stage.setY(bounds.getMinY());
         stage.setWidth(bounds.getWidth());
         stage.setHeight(bounds.getHeight());
+        stage.getIcons().add(new Image("https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Transiting_Exoplanet_Survey_Satellite_artist_concept_%28transparent_background%29.png/1024px-Transiting_Exoplanet_Survey_Satellite_artist_concept_%28transparent_background%29.png"));
 
         stage.show();
 
@@ -335,7 +337,7 @@ public class App extends Application {
          * One can add MapView to the pane using the {@code .getChildren()} method as done below.
          */
         mapView = new MapView();
-        stackPane.getChildren().addAll(mapView,whiteBox,UIheading,comboBoxHeading,combo_box,slider,searchByNORAD,NORADinput,saveButton, addressHeading, addressInput, searchAddress, satname, passStart, passMax, passEnd, timeremaining);
+        stackPane.getChildren().addAll(mapView,whiteBox,UIheading,comboBoxHeading,combo_box,slider,searchByNORAD,NORADinput,saveButton, addressHeading, addressInput, searchAddress, satname, passStart, passMax, passEnd, timeheading, timeremaining);
         StackPane.setAlignment(whiteBox,Pos.TOP_RIGHT);
         StackPane.setAlignment(UIheading, Pos.TOP_RIGHT);
         StackPane.setAlignment(slider,Pos.CENTER_LEFT);
