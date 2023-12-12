@@ -38,11 +38,12 @@
 package com.example.app;
 // Graphics Block
 import com.esri.arcgisruntime.concurrent.ListenableFuture;
-import com.esri.arcgisruntime.geometry.Point;
-import com.esri.arcgisruntime.geometry.SpatialReferences;
+import com.esri.arcgisruntime.geometry.*;
 import com.esri.arcgisruntime.mapping.view.Graphic;
 import com.esri.arcgisruntime.mapping.view.GraphicsOverlay;
 import com.esri.arcgisruntime.symbology.PictureMarkerSymbol;
+import com.esri.arcgisruntime.symbology.SimpleMarkerSceneSymbol;
+import com.esri.arcgisruntime.symbology.SimpleMarkerSymbol;
 import com.esri.arcgisruntime.symbology.TextSymbol;
 
 //Maps Block
@@ -104,6 +105,9 @@ import java.util.concurrent.ExecutionException;
  *<br><br>
  * {@link  App#scale}: It is a global variable storing the zoom scale of the map. Its value is controlled by a slider in the UI rendered using {@link Slider}.
  * Its value is initialized to 700000000.0. To change the value of the scaling, you can change the Slider properties (discussed in its own section below).
+ *
+ *
+ *
  * @author Hardik Bishnoi
  * @version 1.4
  * @since 1.0
@@ -124,11 +128,11 @@ public class App extends Application {
 
     private String address;
 
-    private Point addressLocation;
-
     String[] pass;
 
     private Double[] addressCoords = new Double[]{43.66166026255957, -70.2466777012979};
+
+    private Point addressLocation = new Point(addressCoords[1], addressCoords[0], SpatialReferences.getWgs84());
 
     public static void main(String[] args) {
         Application.launch(args);
@@ -412,6 +416,9 @@ public class App extends Application {
         satmarker.setHeight(40);
         satmarker.setWidth(40);
 
+        SimpleMarkerSymbol markerSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbol.Style.CIRCLE, Color.ORANGE, 10);
+        Graphic pointGraphic = new Graphic(addressLocation, markerSymbol);
+
         /**
          * sattext is a {@link TextSymbol} that initializes the text which tells the user which satellite is being displayed currently
          * on the screen.
@@ -472,12 +479,6 @@ public class App extends Application {
 
         });
 
-        locatorTask = new LocatorTask("https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer");
-
-        geocodeParameters = new GeocodeParameters();
-        geocodeParameters.getResultAttributeNames().add("*");
-        geocodeParameters.setMaxResults(1);
-        geocodeParameters.setOutputSpatialReference(mapView.getSpatialReference());
 
         /**
          * listener for {@link slider} which changes the value of
@@ -508,19 +509,14 @@ public class App extends Application {
             sattext.setText(satName);
         });
 
+
+        locatorcreator();
+
         searchAddress.setOnAction(event -> {
-            address = searchAddress.getText();
+            address = addressInput.getText();
+            System.out.println("This is the " + address);
             if (!address.isBlank()) {
-                locate(address);
-                try {
-                    pass = satPassCall(satID,addressCoords[0], addressCoords[1]);
-                    satname.setText(pass[0]);
-                    passStart.setText(pass[1]);
-                    passMax.setText(pass[2]);
-                    passEnd.setText(pass[3]);
-                } catch (URISyntaxException | IOException | InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+                locate(address, pointGraphic, satname, passStart, passMax, passEnd);
             }
         });
 
@@ -528,7 +524,10 @@ public class App extends Application {
         // add the point graphic to the graphics overlay
         graphicsOverlay.getGraphics().add(satpoint);
         graphicsOverlay.getGraphics().add(sattextgraphic);
+        graphicsOverlay.getGraphics().add(pointGraphic);
         mapView.getGraphicsOverlays().add(graphicsOverlay);
+
+
     }
 
 
@@ -587,12 +586,12 @@ public class App extends Application {
      * @throws InterruptedException
      */
     public Float[] satAPICall(Integer ID) throws URISyntaxException, IOException, InterruptedException {
-        Satellite satellite = new Satellite(ID.toString(), "1", addressCoords[0].toString(), addressCoords[1].toString(), Constants.N2YOAPI);
+        Satellite satellite = new Satellite(ID.toString(), "1", "43.66166026255957", "-70.2466777012979", Constants.N2YOAPI);
         return new Float[]{satellite.satlong,satellite.satlat};
     }
 
     public String satNameCall(Integer ID) throws URISyntaxException, IOException, InterruptedException {
-        Satellite satellite = new Satellite(ID.toString(), "1", addressCoords[0].toString(), addressCoords[1].toString(), Constants.N2YOAPI);
+        Satellite satellite = new Satellite(ID.toString(), "1", "43.66166026255957", "-70.2466777012979", Constants.N2YOAPI);
         return satellite.satname;
     }
 
@@ -609,9 +608,16 @@ public class App extends Application {
         return pass;
     }
 
+    public void locatorcreator(){
+        locatorTask = new LocatorTask("https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer");
 
+        geocodeParameters = new GeocodeParameters();
+        geocodeParameters.getResultAttributeNames().add("*");
+        geocodeParameters.setMaxResults(1);
+        geocodeParameters.setOutputSpatialReference(mapView.getSpatialReference());
+    }
 
-    public Double[] locate(String address){
+    public Double[] locate(String address, Graphic pointGraphic, Text name, Text start, Text max, Text end){
         ListenableFuture<List<GeocodeResult>> geocodeResults = locatorTask.geocodeAsync(address, geocodeParameters);
 
         geocodeResults.addDoneListener(() -> {
@@ -620,8 +626,22 @@ public class App extends Application {
                 if (geocodes.size() > 0) {
                     GeocodeResult result = geocodes.get(0);
                     addressLocation = result.getDisplayLocation();
-                    addressCoords[0] = addressLocation.getX();
-                    addressCoords[1] = addressLocation.getY();
+                    System.out.println(addressLocation.getSpatialReference());
+                    addressLocation = (Point) GeometryEngine.project(addressLocation, SpatialReferences.getWgs84());
+                    pointGraphic.setGeometry(addressLocation);
+                    System.out.println(addressLocation.getY() + "," + addressLocation.getX());
+                    addressCoords[0] = addressLocation.getY();
+                    addressCoords[1] = addressLocation.getX();
+                    try {
+                        pass = satPassCall(satID,addressCoords[0], addressCoords[1]);
+                    } catch (URISyntaxException | IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    System.out.println(addressCoords[0] + ","  + addressCoords[1]);
+                    name.setText(pass[0]);
+                    start.setText(pass[1]);
+                    max.setText(pass[2]);
+                    end.setText(pass[3]);
                 } else {
                     new Alert(Alert.AlertType.INFORMATION, "No results found.").show();
                 }
