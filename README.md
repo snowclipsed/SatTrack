@@ -65,13 +65,15 @@ public static String N2YOAPI = "your-n2yo-api-key";
 5. To build the project using Gradle:
    1. Open the  `build.gradle` file and run it.
    2. Open the Gradle sidebar (if you do not have the sidebar, go to View > Tool Windows > Gradle).
-   3. On the sidebar, double click the copyNatives function to run it. This will install some ArcGIS .jar files.
+   3. On the sidebar, go to Tasks and double click on the copyNatives function to run it. This will install some ArcGIS .jar files.
 
 ### Deployment
 
 To deploy the project, run `src/main/java/com.example/app/App.java`. 
 
 This will open the application window. **Make sure to fullscreen the application window once so graphic elements snap to the right place.**
+
+In case you get an error regarding Gradle's install path, go to Settings > Build, Execution, Deployment > Build Tools > Gradle and put in the correct installation path.
 
 
 
