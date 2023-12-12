@@ -7,11 +7,15 @@ Satellite Tracker is an open-source Java program that leverages the ArcGIS API a
 
 ## Table of Contents
 
-- Introduction
-- Getting Started
-  - Requirements
-  - Installation and Setup
-  - Deployment
+- [Introduction](https://github.com/snowclipsed/SatTrack?tab=readme-ov-file#introduction)
+- [Getting Started](https://github.com/snowclipsed/SatTrack?tab=readme-ov-file#getting-started)
+  - [Requirements](https://github.com/snowclipsed/SatTrack?tab=readme-ov-file#requirements)
+  - [Installation and Setup](https://github.com/snowclipsed/SatTrack?tab=readme-ov-file#requirements)
+  - [Deployment](https://github.com/snowclipsed/SatTrack?tab=readme-ov-file#deployment)
+- [Configuration](https://github.com/snowclipsed/SatTrack?tab=readme-ov-file#configuration)
+- [License](https://github.com/snowclipsed/SatTrack?tab=readme-ov-file#license)
+- [Acknowledgment](https://github.com/snowclipsed/SatTrack?tab=readme-ov-file#acknowledgments)
+- [Support](https://github.com/snowclipsed/SatTrack?tab=readme-ov-file#support)
 
 
 
@@ -75,27 +79,18 @@ In case you get an error regarding Gradle's install path, go to Settings > Build
 
 
 
-## Usage
-
-Run the application using the following command:
-
-```bash
-java -jar target/satellite-tracker.jar
-```
-
-Once the application is running, open your web browser and navigate to [http://localhost:8080](http://localhost:8080) to access the Satellite Tracker interface.
-
-
-
 ## Configuration
 
-You can customize the Satellite Tracker by modifying the `src/main/resources/application.properties` file. Adjust parameters such as update frequency and default map zoom level according to your preferences.
+You can customize the Satellite Tracker by modifying variables in the `src/main/java/com.example/app/App.java` file. Adjust parameters such as update frequency and default map zoom level according to your preferences.
 
 ```properties
 # Application Configuration
-satellite.tracker.update.interval=5000 # Update interval in milliseconds
-satellite.tracker.default.zoom.level=5   # Default map zoom level
+private Integer frequency = 1000; # Update interval in milliseconds
+private Double scale = 70000000.0;  # Default map zoom level
+private Integer satID = 25544; # Default NORAD ID
 ```
+
+
 
 ## License
 
