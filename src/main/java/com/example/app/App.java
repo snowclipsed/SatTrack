@@ -282,7 +282,7 @@ public class App extends Application {
         stage.setY(bounds.getMinY());
         stage.setWidth(bounds.getWidth());
         stage.setHeight(bounds.getHeight());
-        stage.getIcons().add(new Image("https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Transiting_Exoplanet_Survey_Satellite_artist_concept_%28transparent_background%29.png/1024px-Transiting_Exoplanet_Survey_Satellite_artist_concept_%28transparent_background%29.png"));
+        stage.getIcons().add(new Image("https://github.com/snowclipsed/SatTrack/blob/master/src/Images/icon.png?raw=true"));
 
         stage.show();
 
