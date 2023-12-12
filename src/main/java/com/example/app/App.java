@@ -37,6 +37,7 @@
 
 package com.example.app;
 // Graphics Block
+import com.esri.arcgisruntime.concurrent.ListenableFuture;
 import com.esri.arcgisruntime.geometry.Point;
 import com.esri.arcgisruntime.geometry.SpatialReferences;
 import com.esri.arcgisruntime.mapping.view.Graphic;
@@ -50,10 +51,19 @@ import com.esri.arcgisruntime.mapping.ArcGISMap;
 import com.esri.arcgisruntime.mapping.BasemapStyle;
 import com.esri.arcgisruntime.mapping.Viewpoint;
 import com.esri.arcgisruntime.mapping.view.MapView;
-import java.util.Timer;
+import com.esri.arcgisruntime.tasks.geocode.GeocodeParameters;
+import com.esri.arcgisruntime.tasks.geocode.GeocodeResult;
+import com.esri.arcgisruntime.tasks.geocode.LocatorTask;
+
+import java.security.Timestamp;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 //JavaFX block
+import com.esri.arcgisruntime.tasks.geocode.LocatorTask;
 import javafx.application.Application;
+import javafx.scene.control.Alert;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -76,8 +86,7 @@ import javafx.stage.Stage;
 import javafx.scene.control.Slider;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.Stack;
-import java.util.TimerTask;
+import java.util.concurrent.ExecutionException;
 
 /**
  * {@link App} :
@@ -107,6 +116,18 @@ public class App extends Application {
     private Timer timer;
 
     private final Integer countdownSeconds = 11;
+
+    private LocatorTask locatorTask;
+
+    private GeocodeParameters geocodeParameters;
+
+    private String address;
+
+    private Point addressLocation;
+
+    String[] pass;
+
+    private Double[] addressCoords = new Double[]{43.66166026255957, -70.2466777012979};
 
     public static void main(String[] args) {
         Application.launch(args);
@@ -164,10 +185,42 @@ public class App extends Application {
         Text UIheading = new Text("Control Panel");
         UIheading.setFont(Font.font("Arial", FontWeight.BOLD, 20));
         UIheading.setFill(Color.BLACK);
+
         Text comboBoxHeading = new Text("Popular Satellites");
         comboBoxHeading.setFont(new Font(15));
+
+
         Text searchByNORAD = new Text("Find by NORAD ID");
         searchByNORAD.setFont(new Font(15));
+
+        Text addressHeading = new Text("Get pass results for Address");
+        addressHeading.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+        addressHeading.setFill(Color.BLACK);
+
+        Text satname = new Text("Satellite Name: " + "ISS");
+        Text passStart = new Text("""
+                Starting Time:
+
+                Azimuth:\s
+                Elevation:
+                Direction:\s""");
+        passStart.setFont(new Font(10));
+        Text passMax = new Text("""
+                Max Elevation At:
+
+                Azimuth:\s
+                Elevation:
+                Direction:\s""");
+        passMax.setFont(new Font(10));
+        Text passEnd = new Text("""
+                Pass End At:
+
+                Azimuth:\s
+                Elevation
+                Direction:\s""");
+        passEnd.setFont(new Font(10));
+
+
         Text timeheading = new Text("Time remaining till next update:");
         timeheading.setFont(Font.font("Arial", FontWeight.BOLD, 20));
         timeheading.setFill(Color.WHITE);
@@ -214,10 +267,10 @@ public class App extends Application {
         NORADinput.setMaxWidth(175);
         Button saveButton = new Button("Search ID");
 
-
-
-
-
+        TextField addressInput = new TextField();
+        addressInput.setPromptText("Enter Address");
+        addressInput.setMaxWidth(175);
+        Button searchAddress = new Button("Search Passes");
 
         Screen screen = Screen.getPrimary();
         Rectangle2D bounds = screen.getVisualBounds();
@@ -282,7 +335,7 @@ public class App extends Application {
          * One can add MapView to the pane using the {@code .getChildren()} method as done below.
          */
         mapView = new MapView();
-        stackPane.getChildren().addAll(mapView,whiteBox,UIheading,comboBoxHeading,combo_box,slider,searchByNORAD,NORADinput,saveButton,timeheading, timeremaining);
+        stackPane.getChildren().addAll(mapView,whiteBox,UIheading,comboBoxHeading,combo_box,slider,searchByNORAD,NORADinput,saveButton, addressHeading, addressInput, searchAddress, satname, passStart, passMax, passEnd, timeremaining);
         StackPane.setAlignment(whiteBox,Pos.TOP_RIGHT);
         StackPane.setAlignment(UIheading, Pos.TOP_RIGHT);
         StackPane.setAlignment(slider,Pos.CENTER_LEFT);
@@ -291,8 +344,16 @@ public class App extends Application {
         StackPane.setAlignment(searchByNORAD, Pos.TOP_RIGHT);
         StackPane.setAlignment(NORADinput, Pos.TOP_RIGHT);
         StackPane.setAlignment(saveButton, Pos.TOP_RIGHT);
+        StackPane.setAlignment(addressHeading, Pos.TOP_RIGHT);
+        StackPane.setAlignment(searchAddress, Pos.TOP_RIGHT);
+        StackPane.setAlignment(addressInput, Pos.TOP_RIGHT);
+        StackPane.setAlignment(satname, Pos.TOP_LEFT);
+        StackPane.setAlignment(passStart, Pos.TOP_LEFT);
+        StackPane.setAlignment(passMax, Pos.TOP_LEFT);
+        StackPane.setAlignment(passEnd, Pos.TOP_LEFT);
         StackPane.setAlignment(timeheading, Pos.BOTTOM_RIGHT);
         StackPane.setAlignment(timeremaining, Pos.BOTTOM_RIGHT);
+
         StackPane.setMargin(whiteBox, new Insets(70, 40, 0, 0));
         StackPane.setMargin(UIheading, new Insets(75, 125, 0, 0));
         StackPane.setMargin(slider, new Insets(100));
@@ -301,6 +362,13 @@ public class App extends Application {
         StackPane.setMargin(searchByNORAD, new Insets(160, 135, 0, 0));
         StackPane.setMargin(NORADinput, new Insets(185, 100, 0, 0));
         StackPane.setMargin(saveButton, new Insets(220, 155, 0, 0));
+        StackPane.setMargin(addressHeading, new Insets(260, 55, 0, 0));
+        StackPane.setMargin(addressInput, new Insets(290, 100, 0, 0));
+        StackPane.setMargin(searchAddress, new Insets(320, 145, 0, 0));
+        StackPane.setMargin(satname, new Insets(350, 0, 75, 1000));
+        StackPane.setMargin(passStart, new Insets(370, 0, 75, 950));
+        StackPane.setMargin(passMax, new Insets(370, 0, 75, 1100));
+        StackPane.setMargin(passEnd, new Insets(440, 0, 75, 1000));
         StackPane.setMargin(timeheading, new Insets(70, 40, 100, 0));
         StackPane.setMargin(timeremaining, new Insets(70, 175, 75, 0));
 
@@ -402,6 +470,13 @@ public class App extends Application {
 
         });
 
+        locatorTask = new LocatorTask("https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer");
+
+        geocodeParameters = new GeocodeParameters();
+        geocodeParameters.getResultAttributeNames().add("*");
+        geocodeParameters.setMaxResults(1);
+        geocodeParameters.setOutputSpatialReference(mapView.getSpatialReference());
+
         /**
          * listener for {@link slider} which changes the value of
          * scale to zoom the map in and out.
@@ -431,7 +506,21 @@ public class App extends Application {
             sattext.setText(satName);
         });
 
-
+        searchAddress.setOnAction(event -> {
+            address = searchAddress.getText();
+            if (!address.isBlank()) {
+                locate(address);
+                try {
+                    pass = satPassCall(satID,addressCoords[0], addressCoords[1]);
+                    satname.setText(pass[0]);
+                    passStart.setText(pass[1]);
+                    passMax.setText(pass[2]);
+                    passEnd.setText(pass[3]);
+                } catch (URISyntaxException | IOException | InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
 
 
         // add the point graphic to the graphics overlay
@@ -496,13 +585,50 @@ public class App extends Application {
      * @throws InterruptedException
      */
     public Float[] satAPICall(Integer ID) throws URISyntaxException, IOException, InterruptedException {
-        Satellite satellite = new Satellite(ID.toString(), "1", "-70.24637829392033", "43.66167125666995", Constants.N2YOAPI);
+        Satellite satellite = new Satellite(ID.toString(), "1", addressCoords[0].toString(), addressCoords[1].toString(), Constants.N2YOAPI);
         return new Float[]{satellite.satlong,satellite.satlat};
     }
 
     public String satNameCall(Integer ID) throws URISyntaxException, IOException, InterruptedException {
-        Satellite satellite = new Satellite(ID.toString(), "1", "-70.24637829392033", "43.66167125666995", Constants.N2YOAPI);
+        Satellite satellite = new Satellite(ID.toString(), "1", addressCoords[0].toString(), addressCoords[1].toString(), Constants.N2YOAPI);
         return satellite.satname;
+    }
+
+    public String [] satPassCall(Integer ID, Double obslat, Double obslong) throws URISyntaxException, IOException, InterruptedException {
+        Passes passes = new Passes(ID.toString(), "30", obslat.toString(), obslong.toString(), Constants.N2YOAPI);
+        Date startdate = new Date(passes.startUTC*1000);
+        Date maxdate = new Date(passes.maxUTC*1000);
+        Date enddate = new Date(passes.endUTC*1000);
+
+        String [] pass = new String[]{"Satellite Name: " + passes.satname ,"Starting time: \n" + startdate + "\nAzimuth: " + passes.startAz + "\nElevation" + passes.startEl + "\nDirection: " + passes.startAzCompass, "Max Elevation At: \n" + maxdate + "\nAzimuth: " + passes.maxAz + "\nElevation: " + passes.maxEl + "\nDirection: " + passes.maxAzCompass, "Pass End At: \n" + enddate + "\nAzimuth: " + passes.endAz + "\nElevation: " + passes.endEl + "\nDirection: " + passes.endAzCompass, "Duration: " + passes.duration};
+        System.out.println(pass[1]);
+        System.out.println(pass[2]);
+        System.out.println(pass[3]);
+        return pass;
+    }
+
+
+
+    public Double[] locate(String address){
+        ListenableFuture<List<GeocodeResult>> geocodeResults = locatorTask.geocodeAsync(address, geocodeParameters);
+
+        geocodeResults.addDoneListener(() -> {
+            try {
+                List<GeocodeResult> geocodes = geocodeResults.get();
+                if (geocodes.size() > 0) {
+                    GeocodeResult result = geocodes.get(0);
+                    addressLocation = result.getDisplayLocation();
+                    addressCoords[0] = addressLocation.getX();
+                    addressCoords[1] = addressLocation.getY();
+                } else {
+                    new Alert(Alert.AlertType.INFORMATION, "No results found.").show();
+                }
+            } catch (InterruptedException | ExecutionException e) {
+                new Alert(Alert.AlertType.ERROR, "Error getting result.").show();
+                e.printStackTrace();
+            }
+        });
+        return addressCoords;
     }
 
     public void countdown(Text timeremaining){
