@@ -51,9 +51,7 @@ Before running the Satellite Tracker, ensure that you have the following prerequ
    cd SatTrack
    ```
 
-3. Open the directory as an IntelliJ IDEA Project.
-
-<img src="C:\Users\harry\AppData\Roaming\Typora\typora-user-images\image-20231211212109800.png" alt="image-20231211212109800" style="zoom:50%;" />
+3. Open the directory as an IntelliJ IDEA Project (or go to IntelliJ Idea, click on `Open...` and open the project).
 
 4. In IntelliJ IDEA, open the `src/main/java/com.example/app/Constants.java` file and provide your ArcGIS and N2YO API keys:
 
