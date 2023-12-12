@@ -31,26 +31,36 @@ public class Passes{
     public Float duration;
 
     /**
-     * Makes an API call to @see <a href = "https://www.n2yo.com/api/"> N2YO API </a>
+     * Constructs a Passes object by making an API call to retrieve satellite pass information.
+     * <p>
+     * This constructor initializes a Passes object by sending an HTTP GET request to the N2YO API
+     * using the specified parameters, including the satellite ID (satID), observation latitude (obsLat),
+     * observation longitude (obsLong), and API key (APIKEY). The API call is made to obtain visual passes
+     * information for the given satellite as observed from the specified location.
+     * <p>
+     * The obtained JSON response from the API is then parsed using the Jackson ObjectMapper, and the relevant
+     * information is extracted and assigned to the fields of the Passes object, including satellite name, pass
+     * duration, start time, azimuth, azimuth compass direction, elevation, maximum elevation time, maximum azimuth,
+     * maximum azimuth compass direction, maximum elevation, end time, end azimuth, end azimuth compass direction,
+     * and end elevation.
      *
-     * <br>
-     * It first utilizes a {@link HttpRequest} to formulate a GET call.
-     * <br>
-     * Then, it instantiates an {@link HttpClient} which GETs an {@link HttpResponse} and feeds the response into a String.
-     * Then, we utilize a {@link ObjectMapper} to access the longitude and latitude values of the satellite at current time and
-     * feed it to the variables.
      *
-     * @param satID NORAD ID of satellite
-     * @param days Number of seconds into the future you need the API call for. 1 Second is current position.
-     * @param obsLat Observer's latitude. Default set to The Roux Institute {@link App#satAPICall(Integer)}
-     * @param obsLong Observer's longitude. Default set to The Roux Institute {@link App#satAPICall(Integer)}
-     * @param APIKEY User's N2YO APIKEY handler. Takes APIKEY from {@link Constants#N2YOAPI}
-     * @throws URISyntaxException
-     * @throws IOException
-     * @throws InterruptedException
+     * @param satID   The NORAD satellite ID for which pass information is requested.
+     * @param days    The number of days for which pass information is requested.
+     * @param obsLat  The observer's latitude for the pass calculation.
+     * @param obsLong The observer's longitude for the pass calculation.
+     * @param APIKEY  The API key required for accessing the N2YO API.
+     * @throws URISyntaxException If there is an issue with the URI syntax while creating the HTTP request.
+     * @throws IOException        If there is an issue with the IO operations while making the API call.
+     * @throws InterruptedException If the execution is interrupted during the API call.
+     * @see <a href="https://www.n2yo.com/api/#visualpasses">N2YO API - Visual Passes</a>
+     * @see HttpRequest
+     * @see HttpClient
+     * @see HttpResponse
+     * @see ObjectMapper
+     * @see PassRequest
      *
      * @author Hardik Bishnoi
-     * @version 1.4
      * @since 1.0
      */
     Passes(String satID, String days, String obsLat, String obsLong, String APIKEY) throws URISyntaxException, IOException, InterruptedException {

@@ -1,5 +1,21 @@
 package com.example.app;
 
+/**
+ * Represents information about satellite pass positions obtained from the N2YO API.
+ * <p>
+ * The PassPositions class provides access to various attributes related to the positions and characteristics
+ * of a satellite during its pass. It includes getter and setter methods for each attribute, allowing external
+ * code to retrieve or update these values. The attributes encompass details such as azimuth, azimuth compass
+ * direction, elevation, start time (in UTC), maximum azimuth, maximum azimuth compass direction, maximum elevation,
+ * maximum elevation time (in UTC), end azimuth, end azimuth compass direction, end elevation, end time (in UTC),
+ * magnitude, duration of the pass, and start visibility time (in UTC).
+ * <p>
+ *
+ * This class serves as a data structure to store and manage information about satellite pass positions in a
+ * structured manner for the Json Parser to retrieve it.
+ * <p>
+ * @see <a href="https://www.n2yo.com/api/#visualpasses">N2YO API - Visual Passes</a>
+ */
 public class PassPositions {
     public Float getStartAz() {
         return startAz;

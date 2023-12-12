@@ -2,33 +2,33 @@
  *
  *
  * NOTE : IF THIS FAILS TO RUN PLEASE CONTACT ME.
- *
+ * <p>
  * IF APPTest SHOWS AN ERROR, DELETE THE JUNIT TEST, IT HAS ISSUES WITH GRADLE!
- *
+ * <p>
  * ---
- *
+ * <p>
  * BEFORE STARTING:
- *
+ * <p>
  * Go to {@link com.example.app.Constants} and put in your API KEYS!!
- *
+ * <p>
  *
  * --
  * Welcome to the main or App class.
  * This class uses an ARCGiS runtime communicating with a local JavaFX Scene to display a map of the Earth.
  * ARCGiS can also display feature layers and graphics on top of the map using JavaFX and built in support for graphics
  * in its API.
- *
+ * <p>
  * Read more about ARCGiS here : @see <a href = "https://developers.arcgis.com/java/"> ARCGiS Documentation </a>
  * Read more on JavaFX here: @see <a href = "https://openjfx.io/">OpenJFX</a>
- *
+ * <p>
  * You may notice that the imports are divided into various blocks. It's because this makes it easier to identify
  * libraries when you are debugging.
- *
+ * <p>
  * Each block of the libraries serves its own purpose. The first block is Graphics related ARCGiS Libraries,
  * like Point and Graphic.
- *
+ * <p>
  * The second block is used to render the map.
- *
+ * <p>
  * The third block is JavaFX.
  *
  */
@@ -42,7 +42,7 @@ import com.esri.arcgisruntime.geometry.*;
 import com.esri.arcgisruntime.mapping.view.Graphic;
 import com.esri.arcgisruntime.mapping.view.GraphicsOverlay;
 import com.esri.arcgisruntime.symbology.PictureMarkerSymbol;
-import com.esri.arcgisruntime.symbology.SimpleMarkerSceneSymbol;
+//import com.esri.arcgisruntime.symbology.SimpleMarkerSceneSymbol;
 import com.esri.arcgisruntime.symbology.SimpleMarkerSymbol;
 import com.esri.arcgisruntime.symbology.TextSymbol;
 
@@ -56,13 +56,13 @@ import com.esri.arcgisruntime.tasks.geocode.GeocodeParameters;
 import com.esri.arcgisruntime.tasks.geocode.GeocodeResult;
 import com.esri.arcgisruntime.tasks.geocode.LocatorTask;
 
-import java.security.Timestamp;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+//import java.security.Timestamp;
+//import java.text.DateFormat;
+//import java.text.SimpleDateFormat;
 import java.util.*;
 
 //JavaFX block
-import com.esri.arcgisruntime.tasks.geocode.LocatorTask;
+//import com.esri.arcgisruntime.tasks.geocode.LocatorTask;
 import javafx.application.Application;
 import javafx.scene.control.Alert;
 import javafx.beans.value.ChangeListener;
@@ -105,8 +105,38 @@ import java.util.concurrent.ExecutionException;
  *<br><br>
  * {@link  App#scale}: It is a global variable storing the zoom scale of the map. Its value is controlled by a slider in the UI rendered using {@link Slider}.
  * Its value is initialized to 700000000.0. To change the value of the scaling, you can change the Slider properties (discussed in its own section below).
+ *<br><br>
+ * <p>
+ * {@code App#timer}:
+ * Instance of {@link Timer} used for scheduling tasks, specifically updating the satellite's position at regular intervals.
+ * <p>
+ * {@code App#countdownSeconds}:
+ * Number of seconds for the countdown timer. Used in {@link App#countdown(Text)} to update the time remaining till the next update.
  *
+ * <p>
+ * {@code App#locatorTask}:
+ * Instance of {@link LocatorTask} for geocoding addresses. Used in {@link App#locate(String, Graphic, Text, Text, Text, Text)}.
  *
+ * <p>
+ * {@code App#geocodeParameters}:
+ * Instance of {@link GeocodeParameters} specifying parameters for geocoding. Used in {@link App#locate(String, Graphic, Text, Text, Text, Text)}.
+ *
+ * <p>
+ * {@code App#address}:
+ * Stores the address input by the user for geocoding. Used in {@link App#locate(String, Graphic, Text, Text, Text, Text)}.
+ *
+ * <p>
+ * {@code App#pass}:
+ * Array storing information about the satellite pass, such as starting time, max elevation, and end time.
+ * Used in {@link App#locate(String, Graphic, Text, Text, Text, Text)} to update information after geocoding.
+ *
+ * <p>
+ * {@code App#addressCoords}:
+ * Array storing the latitude and longitude coordinates of a given address. Used in {@link App#locate(String, Graphic, Text, Text, Text, Text)}.
+ *
+ * <p>
+ * {@code App#addressLocation}:
+ * Instance of {@link Point} representing the location of an address. Used in {@link App#locate(String, Graphic, Text, Text, Text, Text)} to update the satellite's position.
  *
  * @author Hardik Bishnoi
  * @version 1.4
@@ -116,7 +146,7 @@ public class App extends Application {
 
     private MapView mapView;
     private Integer satID = 25544;
-    private  Double scale = 70000000.0;
+    private Double scale = 70000000.0;
 
     private Timer timer;
 
@@ -480,11 +510,12 @@ public class App extends Application {
         });
 
 
-        /**
-         * listener for {@link slider} which changes the value of
-         * scale to zoom the map in and out.
-         */
+
         slider.valueProperty().addListener(new ChangeListener<Number>() {
+            /**
+             * listener for {@link Slider} which changes the value of
+             * scale to zoom the map in and out.
+             */
             @Override
             public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                 scale = (Double) newValue;
@@ -492,6 +523,26 @@ public class App extends Application {
             }
         });
 
+        /**
+         * Event handler for the saveButton action.
+         * <p>
+         * This event handler is triggered when the saveButton is pressed. It performs the following actions:
+         * 1. Extracts the NORAD ID from the NORADinput TextField and sets it as the current satellite ID (satID).
+         * 2. Calls the 'satNameCall' method to retrieve the name of the satellite associated with the given NORAD ID.
+         * 3. Sets the point on the map using the 'setpoint' method and updates the graphical representation of the satellite
+         *    using the 'sattextgraphic' on the provided MapView.
+         * 4. Initiates a countdown using the 'countdown' method to display the remaining time for the satellite pass.
+         * 5. Sets the text of the sattext Text object to display the name of the satellite.
+         * <p>
+         * In case of any exceptions during the execution of the above steps, a RuntimeException is thrown to indicate an error.
+         *
+         * @param e The ActionEvent triggered by the saveButton.
+         * @throws RuntimeException If there is an issue with NORAD ID conversion, satellite name retrieval,
+         *                          setting the map point, or initiating the countdown.
+         * @see #satNameCall(int)
+         * @see #setpoint(Point, Graphic, MapView)
+         * @see #countdown(TextField)
+         */
         saveButton.setOnAction(e -> {
             satID = Integer.valueOf(NORADinput.getText());
             String satName;
@@ -595,6 +646,33 @@ public class App extends Application {
         return satellite.satname;
     }
 
+    /**
+     * Retrieves satellite pass information for a given satellite ID and observer's location.
+     * <p>
+     * This method makes an API call to the N2YO (www.n2yo.com) API to obtain detailed information about the
+     * passes of a satellite with the specified ID as observed from a given location defined by latitude (obslat)
+     * and longitude (obslong). The retrieved information includes the satellite name, pass start time, maximum
+     * elevation time, pass end time, azimuth, elevation, and direction at various points in the pass, as well as
+     * the total pass duration.
+     *<p>
+     * The method uses the Passes class from the N2YO API to encapsulate the pass information and then converts
+     * the relevant timestamps into human-readable Date objects.
+     *
+     * @param ID      The NORAD satellite ID for which pass information is requested.
+     * @param obslat  The observer's latitude for the pass calculation.
+     * @param obslong The observer's longitude for the pass calculation.
+     * @return An array of Strings representing different aspects of the satellite pass information:
+     *         - pass[0]: Satellite Name
+     *         - pass[1]: Starting time, Azimuth, Elevation, and Direction at pass start
+     *         - pass[2]: Max Elevation time, Azimuth, Elevation, and Direction at maximum elevation
+     *         - pass[3]: Pass end time, Azimuth, Elevation, and Direction at pass end
+     *         - pass[4]: Duration of the pass
+     * @throws URISyntaxException If there is an issue with the URI syntax while making the API call.
+     * @throws IOException        If there is an issue with the IO operations while making the API call.
+     * @throws InterruptedException If the execution is interrupted during the API call.
+     * @see Passes
+     * @see Constants#N2YOAPI
+     */
     public String [] satPassCall(Integer ID, Double obslat, Double obslong) throws URISyntaxException, IOException, InterruptedException {
         Passes passes = new Passes(ID.toString(), "30", obslat.toString(), obslong.toString(), Constants.N2YOAPI);
         Date startdate = new Date(passes.startUTC*1000);
@@ -608,6 +686,24 @@ public class App extends Application {
         return pass;
     }
 
+    /**
+     * Initializes the LocatorTask and associated parameters for geocoding operations.
+     * <p>
+     * This method creates a new instance of the LocatorTask using the specified geocoding service URL.
+     * It also configures GeocodeParameters to request detailed attribute information for the top result,
+     * limits the maximum number of results to 1, and sets the output spatial reference to match the
+     * spatial reference of the provided MapView.
+     * <p>
+     * The LocatorTask and GeocodeParameters are essential components for performing geocoding operations
+     * in the application, allowing the conversion of addresses to geographic coordinates.
+     * <p>
+     * Note: This method should be called before using the 'locate' method to ensure proper initialization
+     * of the LocatorTask and associated parameters.
+     *
+     * @see LocatorTask
+     * @see GeocodeParameters
+     * @see MapView#getSpatialReference()
+     */
     public void locatorcreator(){
         locatorTask = new LocatorTask("https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer");
 
@@ -616,6 +712,29 @@ public class App extends Application {
         geocodeParameters.setMaxResults(1);
         geocodeParameters.setOutputSpatialReference(mapView.getSpatialReference());
     }
+
+    /**
+     * Retrieves the geographic coordinates and satellite pass information for a given address.
+     *
+     * This method asynchronously performs a geocoding operation to convert the provided address
+     * into geographic coordinates. It then utilizes the obtained coordinates to retrieve
+     * satellite pass information from N2YO, including pass name, start time, maximum elevation time, and end time.
+     * The results are updated in the provided Graphic and Text objects.
+     *
+     * @param address      The address to be geocoded to obtain geographic coordinates.
+     * @param pointGraphic The Graphic object representing the location on a map to be updated with the new coordinates.
+     * @param name         The Text object to be updated with the satellite pass name.
+     * @param start        The Text object to be updated with the start time of the satellite pass.
+     * @param max          The Text object to be updated with the maximum elevation time of the satellite pass.
+     * @param end          The Text object to be updated with the end time of the satellite pass.
+     * @return An array of Doubles representing the latitude and longitude of the geocoded address.
+     *         The first element is the latitude, and the second element is the longitude.
+     * @throws RuntimeException If there is an issue with the satellite pass calculation, such as URISyntaxException or IOException.
+     * @see LocatorTask#geocodeAsync(String, GeocodeParameters)
+     * @see GeometryEngine#project(Geometry, SpatialReference) 
+     * @see App#satPassCall(Integer, Double, Double)
+     *
+     */
 
     public Double[] locate(String address, Graphic pointGraphic, Text name, Text start, Text max, Text end){
         ListenableFuture<List<GeocodeResult>> geocodeResults = locatorTask.geocodeAsync(address, geocodeParameters);
@@ -653,6 +772,19 @@ public class App extends Application {
         return addressCoords;
     }
 
+    /**
+     * Initiates a countdown timer and updates a Text object with the remaining time.
+     * <p>
+     * This method uses the java.util.Timer class to schedule a TimerTask that runs at fixed intervals.
+     * The TimerTask encapsulates the countdown logic, decrementing the remaining time each second.
+     * The provided Text object (timeremaining) is updated with the current remaining time during each iteration.
+     *
+     * @param timeremaining The Text object that displays the remaining time of the countdown.
+     * @implNote The countdown starts from the value specified in the 'countdownSeconds' variable.
+     *           The method schedules the TimerTask to run every 1000 milliseconds (1 second).
+     * @see Timer
+     * @see TimerTask
+     */
     public void countdown(Text timeremaining){
         timer.schedule(new TimerTask() {
 
